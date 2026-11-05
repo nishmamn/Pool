@@ -141,7 +141,11 @@ with tab2:
             st.info("The goal was not reached, so every hold was released.")
 
         with SessionLocal() as s:
-            rows = s.scalars(select(Contribution).where(Contribution.pool_id == pid)).all()
+             rows = s.scalars(
+                select(Contribution).where(
+                    Contribution.pool_id == pid, Contribution.status != "pending"
+                )
+            ).all()
         if rows:
             st.markdown("### Contributions")
             st.table([
