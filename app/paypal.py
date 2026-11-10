@@ -1,5 +1,7 @@
 import os
+import time
 import uuid
+
 import httpx
 from dotenv import load_dotenv
 
@@ -8,19 +10,30 @@ load_dotenv()
 BASE = "https://api-m.sandbox.paypal.com"
 AUTH = (os.environ["PAYPAL_CLIENT_ID"], os.environ["PAYPAL_SECRET"])
 
+_client = httpx.Client(
+    timeout=httpx.Timeout(30.0, connect=30.0),
+    transport=httpx.HTTPTransport(retries=3),
+)
+_token_cache = {"value": None, "expires": 0.0}
+
 
 def _token() -> str:
-    r = httpx.post(
+    if _token_cache["value"] and time.time() < _token_cache["expires"]:
+        return _token_cache["value"]
+    r = _client.post(
         f"{BASE}/v1/oauth2/token",
         auth=AUTH,
         data={"grant_type": "client_credentials"},
     )
     r.raise_for_status()
-    return r.json()["access_token"]
+    data = r.json()
+    _token_cache["value"] = data["access_token"]
+    _token_cache["expires"] = time.time() + int(data.get("expires_in", 300)) - 60
+    return _token_cache["value"]
 
 
 def _call(method: str, path: str, body: dict | None = None):
-    r = httpx.request(
+    r = _client.request(
         method,
         f"{BASE}{path}",
         json=body if body is not None else {},
