@@ -3,6 +3,7 @@
 An AI agent that finds a gift, pools money from friends through PayPal, and only charges when the goal is met. Built for the PayPal AI Hackathon.
 
 **Live demo:** https://pool-patk.onrender.com
+
 The demo runs on Render's free plan, so the first load after a quiet period can take about a minute.
 
 ## The problem
